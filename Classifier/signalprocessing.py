@@ -1,30 +1,6 @@
 from __future__ import print_function, division
 from wave import open as open_wave
 from IPython.display import Audio
-#%matplotlib inline
-
-import array
-import copy
-import math
-import cython
-import random
-import scipy as sp
-import scipy.stats
-from scipy import signal
-import scipy.fftpack
-import struct
-import subprocess
-import thinkplot
-import warnings
-import os, glob
-import seaborn as sn
-warnings.simplefilter("ignore", DeprecationWarning)
-
-import numpy as np
-import matplotlib.pyplot as plt
-plt.rcParams["figure.figsize"] = (10,5)
-import seaborn  as sns
-import pandas as pd
 from pandas import read_csv
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import precision_score, recall_score, roc_auc_score, roc_curve
@@ -32,8 +8,33 @@ from sklearn.model_selection import RandomizedSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
+from scipy import signal
+
+import shutil
+import soundfile as sf
+import numpy as np
+import matplotlib.pyplot as plt
+plt.rcParams["figure.figsize"] = (10,5)
+import seaborn  as sns
+import pandas as pd
 import itertools
 import soundmfccparams as smfccp
+import array
+import copy
+import math
+import cython
+import random
+import scipy as sp
+import scipy.stats
+import scipy.fftpack
+import struct
+import subprocess
+import thinkplot
+import warnings
+import os, glob
+import seaborn as sn
+import soundfile as sf
+warnings.simplefilter("ignore", DeprecationWarning)
 
 # Считать WAV-file
 def read_wave(filename='sound.wav'):
@@ -263,7 +264,7 @@ class Wave:
     # Выравнивание сигнала по амплитуде (максимальная амплитуда – фиксированная и равна единице)
     def normalize(self, amp=1.0):
         self.ys = normalize(self.ys, amp=amp)
-    
+         
     # Найти индекс по заданной величине из массива
     def find_index(self, t):
         n = len(self)
@@ -336,7 +337,7 @@ class Wave:
         length = len(self.ys)
         magnitudes = np.abs(np.fft.rfft(self.ys))
         return (np.exp((1 / length) * np.sum(np.log(magnitudes)))) / ((1 / length) * np.sum(magnitudes))
-    
+     
     def make_audio(self):
         audio = Audio(data=self.ys.real, rate=self.framerate)
         return audio
@@ -655,10 +656,10 @@ def extract_data(signalPath):
     signalMaxAmp = calculate_mean_amplitude_list(signalPath)
     #signalMaxAmpSplit = split_calculate_mean_amplitude_list(signalPath)
     signalSco = calculate_SCO_amplitude_list(signalPath)
-    signalCrestFactor = calculate_CRFACT_list(signalPath)
-    signalCentroid = calculate_CENTROID_list(signalPath)
-    signalSpread = calculate_SPREAD_list(signalPath)
-    signalFlatness = calculate_FLATNESS_list(signalPath)
+    #signalCrestFactor = calculate_CRFACT_list(signalPath)
+    #signalCentroid = calculate_CENTROID_list(signalPath)
+    #signalSpread = calculate_SPREAD_list(signalPath)
+    #signalFlatness = calculate_FLATNESS_list(signalPath)
     # Extracting MFCC params (in Dataframe)
     #signalMfcc = smfccp.compute_mfcc(signalPath)
     
@@ -668,17 +669,38 @@ def extract_data(signalPath):
     #sigLst4 = [item[3] for item in signalMaxAmpSplit]
     
     #signalDataFrame = {'Total MaxAmp': signalMaxAmp, 'Split MaxAmp 1': sigLst1, 'Split MaxAmp 2': sigLst2, 'Split MaxAmp 3': sigLst3, 'Split MaxAmp 4': sigLst4, 'SCO': signalSco, 'Crest Factor': signalCrestFactor, 'Centroid': signalCentroid, 'Spread': signalSpread, 'Flatness': signalFlatness}
-    signalDataFrame = {'Total MaxAmp': signalMaxAmp, 'SCO': signalSco, 'Crest Factor': signalCrestFactor, 'Centroid': signalCentroid, 'Spread': signalSpread, 'Flatness': signalFlatness}
+    signalDataFrame = {'Total MaxAmp': signalMaxAmp, 'SCO': signalSco}
     
     signalDataFrame = pd.DataFrame(data=signalDataFrame)
     #signalDataFrame = pd.concat([signalDataFrame,signalMfcc], axis=1)
     
     return signalDataFrame
 
-def plot_all_spectrogramms(audiolist, dataframe, resolution):
-    i = 0
+def plot_all_spectrogramms(audiolist, dataframe, resolution, from_index, to_index, flag_to_begin):
+    i = from_index
     dd = dataframe.loc[dataframe['Flag'] == 1]
-    while (i != (len(dd))):
-        print ("Signal №", dd.iloc[i].name)
-        audiolist[dd.iloc[i].name].plot_spectrogram(audiolist[dd.iloc[i].name], resolution)
-        i = i + 1
+    print ("Signal amount is ", len(dd))
+    if (flag_to_begin == 1):
+        while (i != to_index):
+            print ("Signal №", dd.iloc[i].name)
+            audiolist[dd.iloc[i].name].plot_spectrogram(audiolist[dd.iloc[i].name], resolution)
+            i = i + 1
+            
+def save_wave(filename, audiofile):
+    sf.write(filename, audiofile.ys.real, audiofile.framerate)
+    
+def get_wavefile_name(wavNumber, path):
+    parent_list = os.listdir(path)
+    count = 0
+    for child in parent_list:
+        if count == wavNumber:
+            return child
+        else:
+            if count >= len(parent_list):
+                break
+            else:
+                count = count+1
+        
+def copy_filtered_signal(psignalPath, number):
+    wavfilename = get_wavefile_name(number,psignalPath)
+    shutil.copy2(psignalPath+wavfilename, './filteredSignals')
