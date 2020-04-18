@@ -654,25 +654,27 @@ def plot_confusion_matrix(cm, classes,
 def extract_data(signalPath):
     # This is signal data extracting
     signalMaxAmp = calculate_mean_amplitude_list(signalPath)
-    #signalMaxAmpSplit = split_calculate_mean_amplitude_list(signalPath)
+    signalMaxAmpSplit = split_calculate_mean_amplitude_list(signalPath)
     signalSco = calculate_SCO_amplitude_list(signalPath)
-    #signalCrestFactor = calculate_CRFACT_list(signalPath)
-    #signalCentroid = calculate_CENTROID_list(signalPath)
-    #signalSpread = calculate_SPREAD_list(signalPath)
-    #signalFlatness = calculate_FLATNESS_list(signalPath)
+    signalCrestFactor = calculate_CRFACT_list(signalPath)
+    signalCentroid = calculate_CENTROID_list(signalPath)
+    signalSpread = calculate_SPREAD_list(signalPath)
+    signalFlatness = calculate_FLATNESS_list(signalPath)
     # Extracting MFCC params (in Dataframe)
-    #signalMfcc = smfccp.compute_mfcc(signalPath)
+    signalMfcc = smfccp.compute_mfcc(signalPath)
+    #signalMfccDelta = smfccp.compute_mfcc_delta(signalPath)
     
-    #sigLst1 = [item[0] for item in signalMaxAmpSplit]
-    #sigLst2 = [item[1] for item in signalMaxAmpSplit]
-    #sigLst3 = [item[2] for item in signalMaxAmpSplit]
-    #sigLst4 = [item[3] for item in signalMaxAmpSplit]
+    sigLst1 = [item[0] for item in signalMaxAmpSplit]
+    sigLst2 = [item[1] for item in signalMaxAmpSplit]
+    sigLst3 = [item[2] for item in signalMaxAmpSplit]
+    sigLst4 = [item[3] for item in signalMaxAmpSplit]
     
-    #signalDataFrame = {'Total MaxAmp': signalMaxAmp, 'Split MaxAmp 1': sigLst1, 'Split MaxAmp 2': sigLst2, 'Split MaxAmp 3': sigLst3, 'Split MaxAmp 4': sigLst4, 'SCO': signalSco, 'Crest Factor': signalCrestFactor, 'Centroid': signalCentroid, 'Spread': signalSpread, 'Flatness': signalFlatness}
-    signalDataFrame = {'Total MaxAmp': signalMaxAmp, 'SCO': signalSco}
+    signalDataFrame = {'Total MaxAmp': signalMaxAmp, 'Split MaxAmp 1': sigLst1, 'Split MaxAmp 2': sigLst2, 'Split MaxAmp 3': sigLst3, 'Split MaxAmp 4': sigLst4, 'SCO': signalSco, 'Crest Factor': signalCrestFactor, 'Centroid': signalCentroid, 'Spread': signalSpread, 'Flatness': signalFlatness}
+    #signalDataFrame = {'Total MaxAmp': signalMaxAmp, 'SCO': signalSco}
     
     signalDataFrame = pd.DataFrame(data=signalDataFrame)
-    #signalDataFrame = pd.concat([signalDataFrame,signalMfcc], axis=1)
+    signalDataFrame = pd.concat([signalDataFrame,signalMfcc], axis=1)
+    #signalDataFrame = pd.concat([signalDataFrame,signalMfccDelta], axis=1)
     
     return signalDataFrame
 
