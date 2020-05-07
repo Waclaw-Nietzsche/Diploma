@@ -135,7 +135,7 @@ class Spectrogram:
             array[:, j] = spectrum.amps[:i]
 
         thinkplot.pcolor(ts, fs, array, **options)
-
+        
     def make_wave(self):
         """Inverts the spectrogram and returns a Wave.
 
