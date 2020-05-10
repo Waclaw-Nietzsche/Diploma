@@ -592,6 +592,7 @@ def Pcolor(xs, ys, zs, pcolor=True, contour=False, **options):
     x_formatter = matplotlib.ticker.ScalarFormatter(useOffset=False)
     axes = pyplot.gca()
     axes.xaxis.set_major_formatter(x_formatter)
+    pyplot.axis('off')
 
     if pcolor:
         pyplot.pcolormesh(X, Y, Z, **options)
