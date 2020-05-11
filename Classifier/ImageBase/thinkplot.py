@@ -592,6 +592,7 @@ def Pcolor(xs, ys, zs, pcolor=True, contour=False, **options):
     x_formatter = matplotlib.ticker.ScalarFormatter(useOffset=False)
     axes = pyplot.gca()
     axes.xaxis.set_major_formatter(x_formatter)
+    pyplot.gcf().set_size_inches(18.5, 10.5)
     pyplot.axis('off')
 
     if pcolor:
@@ -696,8 +697,8 @@ def Save(root=None, formats=None, **options):
       formats: list of string formats
       options: keyword args used to invoke various pyplot functions
     """
-    clf = options.pop('clf', True)
-    Config(**options)
+    #clf = options.pop('clf', True)
+    #Config(**options)
 
     if formats is None:
         formats = ['pdf', 'eps']
@@ -724,7 +725,7 @@ def SaveFormat(root, fmt='eps'):
     """
     filename = '%s.%s' % (root, fmt)
     print('Writing', filename)
-    pyplot.savefig(filename, format=fmt, dpi=300)
+    pyplot.savefig(filename, format=fmt, dpi=300, bbox_inches='tight', transparent=True, pad_inches=0)
 
 
 # provide aliases for calling functons with lower-case names
