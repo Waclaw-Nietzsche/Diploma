@@ -590,6 +590,8 @@ def Pcolor(xs, ys, zs, pcolor=True, contour=False, **options):
     Z = zs
 
     x_formatter = matplotlib.ticker.ScalarFormatter(useOffset=False)
+    #pyplot.axis('off')
+    pyplot.gcf().set_size_inches(18.5, 10.5)
     axes = pyplot.gca()
     axes.xaxis.set_major_formatter(x_formatter)
 

@@ -1,3 +1,4 @@
+# Автор: Стрельников Вячеслав Евгеньевич, группа 6305.
 from __future__ import print_function, division
 from wave import open as open_wave
 from IPython.display import Audio
@@ -66,59 +67,43 @@ def read_wave(filename='sound.wav'):
         if nchannels == 2:
             ys = ys[::2]
 
-        #ts = np.arange(len(ys)) / framerate
         wave = Wave(ys, framerate=framerate)
-        #wave.normalize()
         return wave
 
+# Класс спектрограммы аудиофайла
 class Spectrogram:
-    """Represents the spectrum of a signal."""
-
+    
     def __init__(self, spec_map, seg_length):
-        """Initialize the spectrogram.
-
-        spec_map: map from float time to Spectrum
-        seg_length: number of samples in each segment
+        """Инициализация спектрограммы
         """
         self.spec_map = spec_map
         self.seg_length = seg_length
 
-    def any_spectrum(self):
-        """Returns an arbitrary spectrum from the spectrogram."""
-        index = next(iter(self.spec_map))
-        return self.spec_map[index]
-
     @property
     def time_res(self):
-        """Time resolution in seconds."""
+        """Время в секундах."""
         spectrum = self.any_spectrum()
         return float(self.seg_length) / spectrum.framerate
 
     @property
     def freq_res(self):
-        """Frequency resolution in Hz."""
+        """Частота в герцах."""
         return self.any_spectrum().freq_res
 
     def times(self):
-        """Sorted sequence of times.
-
-        returns: sequence of float times in seconds
+        """Последовательность временных отсчетов
         """
         ts = sorted(iter(self.spec_map))
         return ts
 
     def frequencies(self):
-        """Sequence of frequencies.
-
-        returns: sequence of float freqencies in Hz.
+        """Последовательность частот
         """
         fs = self.any_spectrum().fs
         return fs
 
     def plot(self, high=None, **options):
-        """Make a pseudocolor plot.
-
-        high: highest frequency component to plot
+        """Построение спектрограммы
         """
         fs = self.frequencies()
         i = None if high is None else find_index(high, fs)
@@ -137,9 +122,7 @@ class Spectrogram:
         thinkplot.pcolor(ts, fs, array, **options)
         
     def make_wave(self):
-        """Inverts the spectrogram and returns a Wave.
-
-        returns: Wave
+        """На основе спектрограммы генерирует аудиофайл
         """
         res = []
         for t, spectrum in sorted(self.spec_map.items()):
@@ -162,7 +145,6 @@ class Spectrogram:
         for start, end, wave in res:
             ys[start:end] = wave.ys
 
-        # ts = np.arange(len(ys)) / self.framerate
         return Wave(ys, framerate=wave.framerate)
 
 # Найти индекс элемента x  в массиве xs
@@ -173,6 +155,7 @@ def find_index(x, xs):
     i = round((n-1) * (x - start) / (end - start))
     return int(i)
 
+# Класс аудиофайла
 class Wave:
     def __init__(self, ys, ts=None, framerate=None):
 
@@ -207,7 +190,7 @@ class Wave:
 
         assert self.framerate == other.framerate
 
-        # make an array of times that covers both waves
+        # создаем массив временных отсчетов
         start = min(self.start, other.start)
         end = max(self.end, other.end)
         n = int(round((end - start) * self.framerate)) + 1
@@ -216,8 +199,6 @@ class Wave:
 
         def add_ys(wave):
             i = find_index(wave.start, ts)
-
-            # make sure the arrays line up reasonably well
             diff = ts[i] - wave.start
             dt = 1 / wave.framerate
             if (diff / dt) > 0.1:
@@ -229,8 +210,6 @@ class Wave:
             
         def add_y_mid(wave):
             i = find_index(wave.start, ts)
-
-            # make sure the arrays line up reasonably well
             diff = ts[i] - wave.start
             dt = 1 / wave.framerate
             if (diff / dt) > 0.1:
@@ -348,13 +327,11 @@ class Wave:
         i, j = 0, seg_length
         step = int(seg_length // 2)
 
-        # map from time to Spectrum
+        # из временной области в частотную
         spec_map = {}
 
         while j < len(self.ys):
             segment = self.slicen(i, j)
-
-            # the nominal time for this segment is the midpoint
             t = (segment.start + segment.end) / 2
             spec_map[t] = segment.make_spectrum()
 
@@ -380,6 +357,7 @@ def normalize(ys, amp=1.0):
     high, low = abs(max(ys)), abs(min(ys))
     return amp * ys / max(high, low)
 
+# Класс спектра
 class Spectrum:
     def __init__(self, hs, fs, framerate):
         self.hs = np.asanyarray(hs)
@@ -397,12 +375,12 @@ class Spectrum:
     
     @property
     def real(self):
-        """Returns the real part of the hs (read-only property)."""
+        """Действительная часть спектра"""
         return np.real(self.hs)
 
     @property
     def imag(self):
-        """Returns the imaginary part of the hs (read-only property)."""
+        """Мнимая часть спектра"""
         return np.imag(self.hs)
     
     @property
@@ -417,7 +395,7 @@ class Spectrum:
     
     @property
     def angles(self):
-        """Returns a sequence of angles (read-only property)."""
+        """Последовательность угловых коэффициентов"""
         return np.angle(self.hs)
 
     @property
@@ -460,10 +438,11 @@ class SP (object):
 
 def rms_flat(a):
     """
-    Return the root mean square of all the elements of *a*, flattened out.
+    Среднее значение всех элементов во второй степени.
     """
     return np.sqrt(np.mean(abs(a)**2))
-     
+
+# Доверительный интервал
 def mean_confidence_interval(data, confidence=0.99):
     a = 1.0*np.array(data)
     n = len(a)
@@ -472,6 +451,7 @@ def mean_confidence_interval(data, confidence=0.99):
     h = h*3 # Расширяем интервал до 3-х СКО
     return m-h, m, m+h
 
+# Расчет СКО
 def deviation(data, confidence=0.99):
     a = 1.0*np.array(data)
     n = len(a)
@@ -479,6 +459,7 @@ def deviation(data, confidence=0.99):
     h = se * sp.stats.t._ppf((1+confidence)/2., n-1)
     return h
 
+# Расчет среднего значения максимальнйо амплитуды для списка аудиофайлов
 def calculate_mean_amplitude_list(path="C:/Users/tester/Desktop/Strelnikov/noise1"):
     alist = []
     files = os.listdir(path)
@@ -490,7 +471,7 @@ def calculate_mean_amplitude_list(path="C:/Users/tester/Desktop/Strelnikov/noise
         alist.append(average)
     return alist
 
-#split
+# Разбиение файла на 4 части и расчет значений амплитуды для списка аудиофайлов
 def split_calculate_mean_amplitude_list(path="C:/Users/tester/Desktop/Strelnikov/noise1"):
     alist = []
     files = os.listdir(path)
@@ -507,6 +488,7 @@ def split_calculate_mean_amplitude_list(path="C:/Users/tester/Desktop/Strelnikov
         alist.append(temp)
     return alist
 
+# Расчет СКО для списка аудиофайлов
 def calculate_SCO_amplitude_list(path="C:/Users/tester/Desktop/Strelnikov/noise1"):
     SCOlist = []
     files = os.listdir(path)
@@ -518,6 +500,7 @@ def calculate_SCO_amplitude_list(path="C:/Users/tester/Desktop/Strelnikov/noise1
         SCOlist.append(SCO)
     return SCOlist  
 
+# Расчет Пик-фактора для списка аудиофайлов
 def calculate_CRFACT_list(path="C:/Users/tester/Desktop/Strelnikov/noise1"):
     CRFACTlist = []
     files = os.listdir(path)
@@ -529,6 +512,7 @@ def calculate_CRFACT_list(path="C:/Users/tester/Desktop/Strelnikov/noise1"):
         CRFACTlist.append(CRFACT)
     return CRFACTlist  
 
+# Расчет Центроида для списка аудиофайлов
 def calculate_CENTROID_list(path="C:/Users/tester/Desktop/Strelnikov/noise1"):
     CENTROIDlist = []
     files = os.listdir(path)
@@ -538,6 +522,7 @@ def calculate_CENTROID_list(path="C:/Users/tester/Desktop/Strelnikov/noise1"):
         CENTROIDlist.append(CENTROID)
     return CENTROIDlist
 
+# Расчет Распределения для списка аудиофайлов
 def calculate_SPREAD_list(path="C:/Users/tester/Desktop/Strelnikov/noise1"):
     SPREADlist = []
     files = os.listdir(path)
@@ -547,6 +532,7 @@ def calculate_SPREAD_list(path="C:/Users/tester/Desktop/Strelnikov/noise1"):
         SPREADlist.append(SPREAD)
     return SPREADlist
 
+# Расчет Плотности для списка аудиофайлов
 def calculate_FLATNESS_list(path="C:/Users/tester/Desktop/Strelnikov/noise1"):
     FLATNESSlist = []
     files = os.listdir(path)
@@ -556,6 +542,7 @@ def calculate_FLATNESS_list(path="C:/Users/tester/Desktop/Strelnikov/noise1"):
         FLATNESSlist.append(FLATNESS)
     return FLATNESSlist
 
+# Загрузка аудиофайлов в список
 def load_list_of_wav(path="C:/Users/tester/Desktop/Strelnikov/noise1"):
     audiolist = []
     files = os.listdir(path)
@@ -565,6 +552,7 @@ def load_list_of_wav(path="C:/Users/tester/Desktop/Strelnikov/noise1"):
         audiolist.append(wave)
     return audiolist
 
+# Расчет усредненного звукового файла на основе списка аудиофайлов
 def calculate_middle_wave(audiolist):
     for i in range(len(audiolist)):
         if i == 0:
@@ -573,10 +561,9 @@ def calculate_middle_wave(audiolist):
             average += audiolist[i]
     return average
 
-# Classifier processing
+# Классификационные вспомогательные функции
 def evaluate_model(predictions, probs, train_predictions, train_probs, test_labels, train_labels):
-    """Compare machine learning model to baseline performance.
-    Computes statistics and shows ROC curve."""
+    """Построение кривой ошибок и вывод информации метрик качества классификации."""
     
     baseline = {}
     
@@ -598,28 +585,22 @@ def evaluate_model(predictions, probs, train_predictions, train_probs, test_labe
     for metric in ['recall', 'precision', 'roc']:
         print(f'{metric.capitalize()} Baseline: {round(baseline[metric], 2)} Test: {round(results[metric], 2)} Train: {round(train_results[metric], 2)}')
     
-    # Calculate false positive rates and true positive rates
     base_fpr, base_tpr, _ = roc_curve(test_labels, [1 for _ in range(len(test_labels))])
     model_fpr, model_tpr, _ = roc_curve(test_labels, probs)
 
     plt.figure(figsize = (8, 6))
     plt.rcParams['font.size'] = 16
     
-    # Plot both curves
     plt.plot(base_fpr, base_tpr, 'b', label = 'baseline')
     plt.plot(model_fpr, model_tpr, 'r', label = 'model')
     plt.legend();
     plt.xlabel('False Positive Rate'); plt.ylabel('True Positive Rate'); plt.title('ROC Curves');
-    
+
+# Построение матрицы ошибок
 def plot_confusion_matrix(cm, classes,
                           normalize=False,
                           title='Confusion matrix',
                           cmap=plt.cm.Oranges):
-    """
-    This function prints and plots the confusion matrix.
-    Normalization can be applied by setting `normalize=True`.
-    Source: http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
-    """
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
         print("Normalized confusion matrix")
@@ -650,17 +631,17 @@ def plot_confusion_matrix(cm, classes,
     plt.ylabel('True label', size = 18)
     plt.xlabel('Predicted label', size = 18)
     
-#Model testing
+# Расчет классификационных признаков модели
 def extract_data(signalPath):
-    # This is signal data extracting
+    # Вычисление спектральных характеристик
     signalMaxAmp = calculate_mean_amplitude_list(signalPath)
     signalMaxAmpSplit = split_calculate_mean_amplitude_list(signalPath)
     signalSco = calculate_SCO_amplitude_list(signalPath)
     signalCentroid = calculate_CENTROID_list(signalPath)
     signalSpread = calculate_SPREAD_list(signalPath)
     signalFlatness = calculate_FLATNESS_list(signalPath)
-    # Extracting MFCC params (in Dataframe)
-    signalMfcc = smfccp.compute_mfcc(signalPath)
+    # Вычисление MFCC (in Dataframe)
+    #signalMfcc = smfccp.compute_mfcc(signalPath)
     
     sigLst1 = [item[0] for item in signalMaxAmpSplit]
     sigLst2 = [item[1] for item in signalMaxAmpSplit]
@@ -670,10 +651,11 @@ def extract_data(signalPath):
     signalDataFrame = {'Total MaxAmp': signalMaxAmp, 'Split MaxAmp 1': sigLst1, 'Split MaxAmp 2': sigLst2, 'Split MaxAmp 3': sigLst3, 'Split MaxAmp 4': sigLst4, 'SCO': signalSco, 'Centroid': signalCentroid, 'Spread': signalSpread, 'Flatness': signalFlatness}
     
     signalDataFrame = pd.DataFrame(data=signalDataFrame)
-    signalDataFrame = pd.concat([signalDataFrame,signalMfcc], axis=1)
+    #signalDataFrame = pd.concat([signalDataFrame,signalMfcc], axis=1)
     
     return signalDataFrame
 
+# Построение спектрограмм на основе списка аудиофайлов
 def plot_all_spectrogramms(audiolist, dataframe, resolution, from_index, to_index, flag_to_begin):
     i = from_index
     dd = dataframe.loc[dataframe['Flag'] == 1]
@@ -683,10 +665,12 @@ def plot_all_spectrogramms(audiolist, dataframe, resolution, from_index, to_inde
             print ("Signal №", dd.iloc[i].name)
             audiolist[dd.iloc[i].name].plot_spectrogram(audiolist[dd.iloc[i].name], resolution)
             i = i + 1
-            
+
+# Сохранение аудиофайла            
 def save_wave(filename, audiofile):
     sf.write(filename, audiofile.ys.real, audiofile.framerate)
-    
+
+# Возвращает имя аудиофайла
 def get_wavefile_name(wavNumber, path):
     parent_list = os.listdir(path)
     count = 0
@@ -698,11 +682,13 @@ def get_wavefile_name(wavNumber, path):
                 break
             else:
                 count = count+1
-        
+
+# Копирование указанного аудиофайла в указанную папку 
 def copy_filtered_signal(psignalPath, number):
     wavfilename = get_wavefile_name(number,psignalPath)
     shutil.copy2(psignalPath+wavfilename, './filteredSignals')
-    
+
+# Построение матрицы корреляции
 def corr_matrix(signalCorrMatrix):
     f = plt.figure(figsize=(19, 15))
     plt.matshow(signalCorrMatrix.corr(), fignum=f.number)
